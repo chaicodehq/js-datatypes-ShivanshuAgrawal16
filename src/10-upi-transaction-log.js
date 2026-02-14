@@ -47,5 +47,41 @@
  *   //      frequentContact: "Swiggy", allAbove100: false, hasLargeTransaction: true }
  */
 export function analyzeUPITransactions(transactions) {
-  // Your code here
+  if(!Array.isArray(transactions) || transactions.length === 0) return null;
+  let filtered = transactions.filter((transaction) => transaction.amount > 0 && (transaction.type === 'debit' || transaction.type === 'credit') && transaction.category && transaction.id)
+  if(filtered.length === 0) return null;
+  let totalCredit = filtered.reduce((sum, transaction) => transaction.type === 'credit' ? sum + transaction.amount : sum, 0);
+  let totalDebit = filtered.reduce((sum, transaction) => transaction.type === 'debit' ? sum + transaction.amount : sum, 0);
+  let netBalance = totalCredit - totalDebit;
+  let transactionCount = filtered.length
+  let avgTransaction = Math.round((totalCredit + totalDebit) / transactionCount);
+  let highestTransaction = filtered.find((e) => e.amount === filtered.reduce((max, e) => Math.max(max, e.amount), 0));
+  let categoryBreakdown = {};
+  let toFrequency = {};
+  let hasLargeTransaction = filtered.some((e) => e.amount >= 5000);
+  let allAbove100 = filtered.every((e) => e.amount > 100);
+  let frequentContact = {};
+  let maxFrequency = 0;
+  filtered.forEach(e => {
+    categoryBreakdown[e.category] = (categoryBreakdown[e.category] || 0) + e.amount;
+    toFrequency[e.to] = (toFrequency[e.to] || 0) + 1;
+  });
+  filtered.forEach(e => {
+    if(toFrequency[e.to] > maxFrequency) {
+      maxFrequency = toFrequency[e.to];
+      frequentContact = e.to;
+    }
+  });
+  return {
+    totalCredit: totalCredit,
+    totalDebit: totalDebit,
+    netBalance: netBalance,
+    transactionCount: transactionCount,
+    avgTransaction: avgTransaction,
+    highestTransaction: highestTransaction,
+    categoryBreakdown: categoryBreakdown,
+    frequentContact: frequentContact,
+    allAbove100: allAbove100,
+    hasLargeTransaction: hasLargeTransaction
+  }
 }
